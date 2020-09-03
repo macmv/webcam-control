@@ -50,21 +50,21 @@ func main() {
       switch e.ID {
       case "q", "<C-c>":
         return
-      case "j":
+      case "j", "<Down>":
         list.SelectedRow++
         if list.SelectedRow >= len(list.Rows) {
           list.SelectedRow--
         }
-      case "k":
+      case "k", "<Up>":
         list.SelectedRow--
         if list.SelectedRow < 0 {
           list.SelectedRow++
         }
-      case "h":
+      case "h", "<Left>":
         ctrl := ctrls[list.SelectedRow]
         change_value(ctrl, -1, bar_width)
         list.Rows[list.SelectedRow] = gen_line(ctrl, max_len, bar_width)
-      case "l":
+      case "l", "<Right>":
         ctrl := ctrls[list.SelectedRow]
         change_value(ctrl, 1, bar_width)
         list.Rows[list.SelectedRow] = gen_line(ctrl, max_len, bar_width)
