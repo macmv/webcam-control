@@ -17,8 +17,9 @@ import (
 func main() {
   ctrls, max_len := list_ctrls()
   lines := []string{}
+  bar_width := 50
   for _, ctrl := range ctrls {
-    data := gen_line(ctrl, max_len)
+    data := gen_line(ctrl, max_len, bar_width)
     lines = append(lines, data)
   }
 
@@ -27,29 +28,15 @@ func main() {
   }
   defer ui.Close()
 
-  p := widgets.NewParagraph()
-  p.Title = "Text Box"
-  p.Text = "PRESS q TO QUIT DEMO"
-  p.SetRect(0, 0, 50, 5)
-  p.TextStyle.Fg = ui.ColorWhite
-  p.BorderStyle.Fg = ui.ColorCyan
-
-  updateParagraph := func(count int) {
-    if count%2 == 0 {
-      p.TextStyle.Fg = ui.ColorRed
-    } else {
-      p.TextStyle.Fg = ui.ColorWhite
-    }
-  }
-
   list := widgets.NewList()
   list.Title = "Controls"
   list.Rows = lines
-  list.SetRect(0, 5, 200, 20)
-  list.TextStyle.Fg = ui.ColorYellow
+  list.SetRect(0, 0, 200, 20)
+  list.TextStyle.Fg = ui.ColorBlue
+  list.SelectedRowStyle.Fg = ui.ColorWhite
 
   draw := func() {
-    ui.Render(p, list)
+    ui.Render(list)
   }
 
   tickerCount := 1
@@ -73,17 +60,40 @@ func main() {
         if list.SelectedRow < 0 {
           list.SelectedRow++
         }
+      case "h":
+        ctrl := ctrls[list.SelectedRow]
+        change_value(ctrl, -1, bar_width)
+        list.Rows[list.SelectedRow] = gen_line(ctrl, max_len, bar_width)
+      case "l":
+        ctrl := ctrls[list.SelectedRow]
+        change_value(ctrl, 1, bar_width)
+        list.Rows[list.SelectedRow] = gen_line(ctrl, max_len, bar_width)
       }
       draw()
     case <-ticker:
-      updateParagraph(tickerCount)
       draw()
       tickerCount++
     }
   }
 }
 
-func gen_line(ctrl *control, max_len int) string {
+func change_value(ctrl *control, amount, bar_width int) {
+  size := float64(ctrl.max - ctrl.min)
+  step := int(size / float64(bar_width))
+  if step < 1 {
+    step = 1
+  }
+  ctrl.val += amount * step
+  if ctrl.val < ctrl.min {
+    ctrl.val = ctrl.min
+  }
+  if ctrl.val > ctrl.max {
+    ctrl.val = ctrl.max
+  }
+  set_ctrl(ctrl.name, ctrl.val)
+}
+
+func gen_line(ctrl *control, max_len, bar_width int) string {
   line := ""
   line = add_col(line, ctrl.name,              max_len)
   line = add_col(line, strconv.Itoa(ctrl.min), 6)
@@ -91,9 +101,9 @@ func gen_line(ctrl *control, max_len int) string {
   line = add_col(line, strconv.Itoa(ctrl.max), 6)
   line += "["
   percent := float64(ctrl.val - ctrl.min) / float64(ctrl.max - ctrl.min)
-  num_chars := int(percent * 50)
+  num_chars := int(percent * float64(bar_width))
   line += strings.Repeat("-", num_chars)
-  line += strings.Repeat(" ", 50 - num_chars)
+  line += strings.Repeat(" ", bar_width - num_chars)
   line += "] "
   return line
 }

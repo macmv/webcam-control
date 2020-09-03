@@ -75,3 +75,8 @@ func list_ctrls() ([]*control, int) {
   }
   return controls, max_len
 }
+
+func set_ctrl(name string, val int) {
+  cmd := exec.Command("v4l2-ctl", "--set-ctrl", name + "=" + strconv.Itoa(val))
+  cmd.Run()
+}
